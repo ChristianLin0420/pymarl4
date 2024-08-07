@@ -132,9 +132,15 @@ if __name__ == '__main__':
             assert False, "default.yaml error: {}".format(exc)
 
     # Load algorithm and env base configs
+    map_name = parse_command(params, "env_args.map_name", None)
+
+    if map_name is None:
+        print("Please specify the map name using --env_args.map_name")
+        exit(1)
+
     env_config = _get_config(params, "--env-config", "envs")
     alg_config = _get_config(params, "--config", "algs")
-    map_config = _get_map_config(env_config["env_args"]["map_name"])
+    map_config = _get_map_config(map_name)
     
     config_dict = recursive_dict_update(config_dict, env_config)
     config_dict = recursive_dict_update(config_dict, alg_config)
