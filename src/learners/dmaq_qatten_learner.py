@@ -145,7 +145,7 @@ class DMAQ_qattenLearner:
 
         self.train_t += 1
         self.avg_time += (time.time() - start_time - self.avg_time) / self.train_t
-        print("Avg cost {} seconds".format(self.avg_time))
+        # print("Avg cost {} seconds".format(self.avg_time))
 
         if not split_data and t_env - self.log_stats_t >= self.args.learner_log_interval:
             with th.no_grad():

@@ -1,5 +1,6 @@
 from collections import defaultdict
 import logging
+import wandb
 import numpy as np
 import torch as th
 
@@ -8,6 +9,7 @@ class Logger:
         self.console_logger = console_logger
 
         self.use_tb = False
+        self.use_wandb = False
         self.use_sacred = False
         self.use_hdf = False
 
@@ -20,6 +22,13 @@ class Logger:
         self.tb_logger = log_value
         self.use_tb = True
 
+    def setup_wandb(self, project_name, wandb_api_key, logdir):
+        wandb.init(project=project_name, name=logdir, reinit=True)
+        wandb.login(key=wandb_api_key)
+        self.wandb = wandb
+        self.logdir = logdir
+        self.use_wandb = True
+
     def setup_sacred(self, sacred_run_dict):
         self.sacred_info = sacred_run_dict.info
         self.use_sacred = True
@@ -29,6 +38,9 @@ class Logger:
 
         if self.use_tb:
             self.tb_logger(key, value, t)
+
+        if self.use_wandb:
+            self.wandb.log({key: value}, step=t)
 
         if self.use_sacred and to_sacred:
             if key in self.sacred_info:

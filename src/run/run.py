@@ -4,6 +4,7 @@ import pprint
 import time
 import threading
 import torch as th
+from dotenv import load_dotenv
 from types import SimpleNamespace as SN
 from utils.logging import Logger
 from utils.timehelper import time_left, time_str
@@ -22,6 +23,11 @@ def run(_run, _config, _log):
     _config = args_sanity_check(_config, _log)
 
     args = SN(**_config)
+    args.device = "cuda:{}".format(args.gpu_id) if args.use_cuda else "cpu"
+
+    if args.use_cuda:
+        th.cuda.set_device(args.device)
+
 
     th.set_num_threads(args.thread_num)
     # th.set_num_interop_threads(8)
@@ -49,11 +55,9 @@ def run(_run, _config, _log):
     env_name = args.env
     logdir = env_name
     if env_name in ["sc2", "sc2_v2", ]:
-        logdir = os.path.join("{}_{}-obs_aid={}-obs_act={}".format(
+        logdir = os.path.join("{}_{}".format(
             logdir,
             args.env_args["map_name"],
-            int(args.obs_agent_id),
-            int(args.obs_last_action),
         ))
         if env_name == "sc2_v2":
             logdir = logdir + "-conic_fov={}".format(
@@ -104,15 +108,15 @@ def run(_run, _config, _log):
                                       args.hpn_hyper_activation,
                                   ))
 
-    logdir = os.path.join(logdir,
-                          "rnn_dim={}-2bs={}_{}-tdlambda={}-epdec_{}={}k".format(
-                              args.rnn_hidden_dim,
-                              args.buffer_size,
-                              args.batch_size,
-                              args.td_lambda,
-                              args.epsilon_finish,
-                              args.epsilon_anneal_time // 1000,
-                          ))
+    # logdir = os.path.join(logdir,
+    #                       "rnn_dim={}-2bs={}_{}-tdlambda={}-epdec_{}={}k".format(
+    #                           args.rnn_hidden_dim,
+    #                           args.buffer_size,
+    #                           args.batch_size,
+    #                           args.td_lambda,
+    #                           args.epsilon_finish,
+    #                           args.epsilon_anneal_time // 1000,
+    #                       ))
     args.log_model_dir = logdir
     if args.use_tensorboard:
         tb_logs_direc = os.path.join(dirname(dirname(dirname(abspath(__file__)))), args.local_results_path, "tb_logs")
@@ -120,6 +124,12 @@ def run(_run, _config, _log):
         if args.name in testing_algorithms:  # add parameter config to the logger path！
             tb_exp_direc = os.path.join(tb_logs_direc, logdir, unique_token)
         logger.setup_tb(tb_exp_direc)
+
+    if args.use_wandb:
+        load_dotenv()
+        api_key = os.getenv("WANDB_API_KEY")
+        project_name = os.getenv("PROJECT_NAME")
+        logger.setup_wandb(project_name, api_key, logdir)
 
     # sacred is on by default
     logger.setup_sacred(_run)
