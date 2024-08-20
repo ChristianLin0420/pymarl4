@@ -165,11 +165,21 @@ class WMLearner:
         dqn_loss = masked_td_error.sum() / mask_elems
 
         # Calculate world model loss
-        wm_latent_obs = wm_latent_obs.view(-1, self.args.n_agents, self.wm_latent_dim)
-        reconstruction_hidden_state = reconstruction_hidden_state.view(-1, self.args.n_agents, self.args.rnn_hidden_dim)    
-        original_hidden_state = original_hidden_state.view(-1, self.args.n_agents, self.args.rnn_hidden_dim)
-        wm_state_latent = wm_state_latent.view(-1, 1, self.wm_latent_dim).repeat(1, self.args.n_agents, 1)
+        last_batch_size = batch.batch_size * (batch.max_seq_length - 1)
+        print(f"last_batch_size: {last_batch_size}")
+        wm_latent_obs = wm_latent_obs.view(-1, self.args.n_agents, self.wm_latent_dim)[:last_batch_size, :]
+        reconstruction_hidden_state = reconstruction_hidden_state.view(-1, self.args.n_agents, self.args.rnn_hidden_dim)[:last_batch_size, :]
+        original_hidden_state = original_hidden_state.view(-1, self.args.n_agents, self.args.rnn_hidden_dim)[:last_batch_size, :]
+        wm_state_latent = wm_state_latent.view(-1, 1, self.wm_latent_dim).repeat(1, self.args.n_agents, 1)[:last_batch_size, :]
         reconstruction_state = reconstruction_state.view(-1, self.args.state_shape)
+        original_state = original_state.reshape(-1, self.args.state_shape)
+
+        print(f"wm_latent_obs: {wm_latent_obs.shape}")
+        print(f"reconstruction_hidden_state: {reconstruction_hidden_state.shape}")
+        print(f"original_hidden_state: {original_hidden_state.shape}")
+        print(f"wm_state_latent: {wm_state_latent.shape}")
+        print(f"reconstruction_state: {reconstruction_state.shape}")
+        print(f"original_state: {original_state.shape}")
 
         obs_mse_loss = self.args.obs_rl_lambda * th.mean((reconstruction_hidden_state - original_hidden_state) ** 2)
         state_mse_loss = self.args.state_rl_lambda * th.mean((reconstruction_state - original_state) ** 2)
