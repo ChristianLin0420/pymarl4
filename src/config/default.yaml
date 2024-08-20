@@ -18,8 +18,8 @@ gpu_id: 0 # Index of the training gpu
 buffer_cpu_only: True # If true we won't keep all of the replay buffer in vram
 
 # --- Logging options ---
-use_tensorboard: True # Log results to tensorboard
-use_wandb: True # Log results to wandb
+use_tensorboard: False # Log results to tensorboard
+use_wandb: False # Log results to wandb
 save_model: True # Save the models to disk
 save_model_interval: 1000000 # Save models after this many timesteps
 checkpoint_path: "" # Load a checkpoint from this path

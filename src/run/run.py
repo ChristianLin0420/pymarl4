@@ -110,8 +110,11 @@ def run(_run, _config, _log):
 
         elif args.name in ["world_model_hyper_qmix_v0"]:
             logdir = os.path.join(logdir,
-                                    "mixer={}-rl=mse".format(
+                                    "mixer={}-rl=mse-obs_rl={}-state_rl={}-latent_rl={}".format(
                                     args.mixer,
+                                    args.obs_rl_lambda,
+                                    args.state_rl_lambda,
+                                    args.latent_rl_lambda,
                                     ))
 
     # logdir = os.path.join(logdir,

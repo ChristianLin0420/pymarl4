@@ -31,9 +31,9 @@ td_lambda: 0.6
 optimizer: 'adam'
 q_lambda: False
 
-obs_rl_lambda: 1
-state_rl_lambda: 1
-latent_rl_lambda: 1
+obs_rl_lambda: 10
+state_rl_lambda: 100
+latent_rl_lambda: 10
 
 #name: "vdn_env=8_adam_td_lambda"
 name: "world_model_hyper_qmix"
