@@ -4,6 +4,8 @@ from components.episode_buffer import EpisodeBatch
 import numpy as np
 import time
 
+WORLD_MODELING_AGENTS = ["wm_hyper_rnn"]
+
 
 class EpisodeRunner:
 
@@ -77,7 +79,14 @@ class EpisodeRunner:
 
             # Pass the entire batch of experiences up till now to the agents
             # Receive the actions for each agent at this timestep in a batch of size 1
-            actions = self.mac.select_actions(self.batch, t_ep=self.t, t_env=self.t_env, test_mode=test_mode)
+
+            if self.args.agent in WORLD_MODELING_AGENTS:
+                actions, _, _, _ = self.mac.select_actions(self.batch, t_ep=self.t, t_env=self.t_env,
+                                                                                                                    test_mode=test_mode)
+            else:
+                actions = self.mac.select_actions(
+                    self.batch, t_ep=self.t, t_env=self.t_env, test_mode=test_mode)
+
             # Fix memory leak
             cpu_actions = actions.to("cpu").numpy()
 
@@ -86,6 +95,9 @@ class EpisodeRunner:
 
             post_transition_data = {
                 "actions": cpu_actions,
+                # "wm_latent_obs": wm_latent_state.to("cpu").numpy() if self.args.agent in WORLD_MODELING_AGENTS else [],
+                # "reconstruction_hidden_state": reconstruct_hidden_state.to("cpu").numpy() if self.args.agent in WORLD_MODELING_AGENTS else [],
+                # "original_hidden_state": original_hidden_state.to("cpu").numpy() if self.args.agent in WORLD_MODELING_AGENTS else [],
                 "reward": [(reward,)],
                 "terminated": [(terminated != env_info.get("episode_limit", False),)],
             }
@@ -106,15 +118,28 @@ class EpisodeRunner:
         self.batch.update(last_data, ts=self.t)
 
         # Select actions in the last stored state
-        actions = self.mac.select_actions(self.batch, t_ep=self.t, t_env=self.t_env, test_mode=test_mode)
+        if self.args.agent in WORLD_MODELING_AGENTS:
+            actions, wm_latent_state, reconstruct_hidden_state, original_hidden_state = self.mac.select_actions(self.batch, t_ep=self.t, t_env=self.t_env,
+                                                                                                                test_mode=test_mode)
+        else:
+            actions = self.mac.select_actions(
+                self.batch, t_ep=self.t, t_env=self.t_env, test_mode=test_mode)
+
         # Fix memory leak
         cpu_actions = actions.to("cpu").numpy()
         self.batch.update({"actions": cpu_actions}, ts=self.t)
+        self.batch.update({"wm_latent_obs": wm_latent_state.to("cpu").numpy(
+        )} if self.args.agent in WORLD_MODELING_AGENTS else [], ts=self.t)
+        self.batch.update({"reconstruction_hidden_state": reconstruct_hidden_state.to(
+            "cpu").numpy()} if self.args.agent in WORLD_MODELING_AGENTS else [], ts=self.t)
+        self.batch.update({"original_hidden_state": original_hidden_state.to(
+            "cpu").numpy()} if self.args.agent in WORLD_MODELING_AGENTS else [], ts=self.t)
 
         cur_stats = self.test_stats if test_mode else self.train_stats
         cur_returns = self.test_returns if test_mode else self.train_returns
         log_prefix = "test_" if test_mode else ""
-        cur_stats.update({k: cur_stats.get(k, 0) + env_info.get(k, 0) for k in set(cur_stats) | set(env_info)})
+        cur_stats.update({k: cur_stats.get(k, 0) + env_info.get(k, 0)
+                         for k in set(cur_stats) | set(env_info)})
         cur_stats["n_episodes"] = 1 + cur_stats.get("n_episodes", 0)
         cur_stats["ep_length"] = self.t + cur_stats.get("ep_length", 0)
 
@@ -128,19 +153,25 @@ class EpisodeRunner:
         elif not test_mode and self.t_env - self.log_train_stats_t >= self.args.runner_log_interval:
             self._log(cur_returns, cur_stats, log_prefix)
             if hasattr(self.mac.action_selector, "epsilon"):
-                self.logger.log_stat("epsilon", self.mac.action_selector.epsilon, self.t_env)
+                self.logger.log_stat(
+                    "epsilon", self.mac.action_selector.epsilon, self.t_env)
             self.log_train_stats_t = self.t_env
 
         return self.batch
 
     def _log(self, returns, stats, prefix):
-        self.logger.log_stat(prefix + "return_min", np.min(returns), self.t_env)
-        self.logger.log_stat(prefix + "return_max", np.max(returns), self.t_env)
-        self.logger.log_stat(prefix + "return_mean", np.mean(returns), self.t_env)
-        self.logger.log_stat(prefix + "return_std", np.std(returns), self.t_env)
+        self.logger.log_stat(prefix + "return_min",
+                             np.min(returns), self.t_env)
+        self.logger.log_stat(prefix + "return_max",
+                             np.max(returns), self.t_env)
+        self.logger.log_stat(prefix + "return_mean",
+                             np.mean(returns), self.t_env)
+        self.logger.log_stat(prefix + "return_std",
+                             np.std(returns), self.t_env)
         returns.clear()
 
         for k, v in stats.items():
             if k != "n_episodes":
-                self.logger.log_stat(prefix + k + "_mean", v / stats["n_episodes"], self.t_env)
+                self.logger.log_stat(prefix + k + "_mean",
+                                     v / stats["n_episodes"], self.t_env)
         stats.clear()

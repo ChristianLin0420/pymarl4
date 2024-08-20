@@ -4,8 +4,10 @@ from components.episode_buffer import EpisodeBatch
 from multiprocessing import Pipe, Process
 
 import numpy as np
+import torch as th
 import time
 
+WORLD_MODELING_AGENTS = ["wm_hyper_rnn"]
 
 # Based (very) heavily on SubprocVecEnv from OpenAI Baselines
 # https://github.com/openai/baselines/blob/master/baselines/common/vec_env/subproc_vec_env.py
@@ -84,7 +86,7 @@ class ParallelRunner:
         pre_transition_data = {
             "state": [],
             "avail_actions": [],
-            "obs": []
+            "obs": [],
         }
         # Get the obs, state and avail_actions back
         for parent_conn in self.parent_conns:
@@ -116,20 +118,34 @@ class ParallelRunner:
             if save_probs:
                 actions, probs = self.mac.select_actions(self.batch, t_ep=self.t, t_env=self.t_env,
                                                          bs=envs_not_terminated, test_mode=test_mode)
+            elif self.args.agent in WORLD_MODELING_AGENTS:
+                actions, _, _, _ = self.mac.select_actions(self.batch, t_ep=self.t, t_env=self.t_env,
+                                                                           bs=envs_not_terminated, test_mode=test_mode)
             else:
                 actions = self.mac.select_actions(self.batch, t_ep=self.t, t_env=self.t_env, bs=envs_not_terminated,
                                                   test_mode=test_mode)
 
             cpu_actions = actions.to("cpu").numpy()
+            # bs_actions = cpu_actions.shape[0]
 
             # Update the actions taken
             actions_chosen = {
                 "actions": np.expand_dims(cpu_actions, axis=1),
             }
+
             if save_probs:
                 actions_chosen["probs"] = probs.unsqueeze(1).to("cpu")
 
             self.batch.update(actions_chosen, bs=envs_not_terminated, ts=self.t, mark_filled=False)
+
+            # if self.args.agent in WORLD_MODELING_AGENTS:
+            #     actions_chosen["wm_latent_obs"] = th.unsqueeze(wm_latent_state[:bs_actions, :, :], 1).to("cpu").numpy()
+            #     actions_chosen["reconstruction_hidden_state"] = th.unsqueeze(reconstruct_hidden_state[:bs_actions, :, :], 1).to("cpu").numpy()
+            #     actions_chosen["original_hidden_state"] = th.unsqueeze(original_hidden_state[:bs_actions, :, :], 1).to("cpu").numpy()
+
+                # print(f"wm_latent_state shape: {wm_latent_state.shape}")
+                # print(f"reconstruct_hidden_state shape: {reconstruct_hidden_state.shape}")
+                # print(f"original_hidden_state shape: {original_hidden_state.shape}")
 
             # Send actions to each env
             action_idx = 0

@@ -108,6 +108,12 @@ def run(_run, _config, _log):
                                       args.hpn_hyper_activation,
                                   ))
 
+        elif args.name in ["world_model_hyper_qmix_v0"]:
+            logdir = os.path.join(logdir,
+                                    "mixer={}-rl=mse".format(
+                                    args.mixer,
+                                    ))
+
     # logdir = os.path.join(logdir,
     #                       "rnn_dim={}-2bs={}_{}-tdlambda={}-epdec_{}={}k".format(
     #                           args.rnn_hidden_dim,
@@ -196,6 +202,9 @@ def run_sequential(args, logger):
         "actions": {"vshape": (1,), "group": "agents", "dtype": th.long},
         "avail_actions": {"vshape": (env_info["n_actions"],), "group": "agents", "dtype": th.int},
         "probs": {"vshape": (env_info["n_actions"],), "group": "agents", "dtype": th.float},
+        "wm_latent_obs": {"vshape": (args.rnn_hidden_dim // args.wm_latent_divider,), "group": "agents", "dtype": th.float},
+        "reconstruction_hidden_state": {"vshape": (args.rnn_hidden_dim,), "group": "agents", "dtype": th.float},
+        "original_hidden_state": {"vshape": (args.rnn_hidden_dim,), "group": "agents", "dtype": th.float},
         "reward": {"vshape": (1,)},
         "terminated": {"vshape": (1,), "dtype": th.uint8},
     }

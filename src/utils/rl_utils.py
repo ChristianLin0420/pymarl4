@@ -2,6 +2,25 @@ import torch as th
 import torch.nn as nn
 import numpy as np
 
+from sklearn.metrics import mutual_info_score
+
+def mutual_information_loss(source, target):
+    # Flatten the last two dimensions to calculate mutual information for each feature pair
+    flat_source = source.reshape(-1, source.shape[-1])
+    flat_target = target.reshape(-1, target.shape[-1])
+
+    # Calculate mutual information for each corresponding feature pair
+    mutual_information = []
+    for i in range(flat_source.shape[1]):
+        mi = mutual_info_score(flat_source[:, i], flat_target[:, i])
+        mutual_information.append(mi)
+
+    # Convert the list to a numpy array and take the mean as the loss
+    mutual_information = np.array(mutual_information)
+    loss = mutual_information.mean()
+
+    return loss
+
 
 def build_td_lambda_targets(rewards, terminated, mask, target_qs, gamma, td_lambda):
     # Assumes  <target_qs > in B*T*A and <reward >, <terminated >, <mask > in (at least) B*T-1*1
