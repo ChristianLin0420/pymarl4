@@ -108,7 +108,7 @@ def run(_run, _config, _log):
                                       args.hpn_hyper_activation,
                                   ))
 
-        elif args.name in ["world_model_hyper_qmix_v0"]:
+        elif args.name.startswith("world_model_hyper_qmix"):
             logdir = os.path.join(logdir,
                                     "mixer={}-rl=mse-obs_rl={}-state_rl={}-latent_rl={}".format(
                                     args.mixer,
