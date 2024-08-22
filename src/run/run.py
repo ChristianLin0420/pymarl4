@@ -50,7 +50,7 @@ def run(_run, _config, _log):
     testing_algorithms = ["vdn", "qmix", "hpn_vdn", "hpn_qmix",
                           "deepset_vdn", "deepset_qmix", "deepset_hyper_vdn", "deepset_hyper_qmix",
                           "updet_vdn", "updet_qmix", "vdn_DA", "qmix_DA",
-                          "gnn_vdn", "gnn_qmix", "qplex", "hpn_qplex", "asn"
+                          "gnn_vdn", "gnn_qmix", "qplex", "hpn_qplex", "asn", "world_model_hyper_qmix"
                           ]
     env_name = args.env
     logdir = env_name
@@ -108,7 +108,7 @@ def run(_run, _config, _log):
                                       args.hpn_hyper_activation,
                                   ))
 
-        elif args.name.startswith("world_model_hyper_qmix"):
+        elif args.name in ["world_model_hyper_qmix"]:
             logdir = os.path.join(logdir,
                                     "mixer={}-rl=mse-obs_rl={}-state_rl={}-latent_rl={}".format(
                                     args.mixer,
