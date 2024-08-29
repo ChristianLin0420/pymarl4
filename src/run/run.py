@@ -51,7 +51,7 @@ def run(_run, _config, _log):
                           "deepset_vdn", "deepset_qmix", "deepset_hyper_vdn", "deepset_hyper_qmix",
                           "updet_vdn", "updet_qmix", "vdn_DA", "qmix_DA",
                           "gnn_vdn", "gnn_qmix", "qplex", "hpn_qplex", "asn",
-                          "world_model_hyper_qmix", "world_model_hyper_qmix_v1", "mamba_qmix"
+                          "world_model_hyper_qmix", "world_model_hyper_qmix_v1", "mamba_qmix", "hpn_mamba_qmix"
                           ]
     env_name = args.env
     logdir = env_name
@@ -117,7 +117,7 @@ def run(_run, _config, _log):
                                     args.state_rl_lambda,
                                     args.latent_rl_lambda,
                                     ))
-        elif args.name in ["mamba_qmix"]:
+        elif args.name in ["mamba_qmix", "hpn_mamba_qmix"]:
             logdir = os.path.join(logdir,
                                   "mixer={}-mamba_layer={}-mamba_hidden_dim={}".format(
                                       args.mixer,

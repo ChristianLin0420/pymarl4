@@ -11,6 +11,7 @@ from .rnn_agent import RNNAgent
 from .updet_agent import UPDeT
 
 from .n_mamba import NMAMBAAgent
+from .hpns_mamba_agent import HPNS_MAMBAAgent
 from .wm_agent import WorldModelingHyperRNNAgent
 from .wm_v1_agent import WorldModelingHyperRNNV1Agent
 
@@ -25,6 +26,7 @@ REGISTRY["asn_rnn"] = AsnRNNAgent
 REGISTRY["gnn_rnn"] = GnnRNNAgent
 
 REGISTRY["n_mamba"] = NMAMBAAgent
+REGISTRY["hpns_mamba"] = HPNS_MAMBAAgent
 REGISTRY["wm_hyper_rnn"] = WorldModelingHyperRNNAgent
 REGISTRY["wm_v1_hyper_rnn"] = WorldModelingHyperRNNV1Agent
 
