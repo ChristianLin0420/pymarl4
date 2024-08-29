@@ -9,7 +9,10 @@ from .gnn_rnn_agent import GnnRNNAgent
 from .n_rnn_agent import NRNNAgent
 from .rnn_agent import RNNAgent
 from .updet_agent import UPDeT
+
+from .n_mamba import NMAMBAAgent
 from .wm_agent import WorldModelingHyperRNNAgent
+from .wm_v1_agent import WorldModelingHyperRNNV1Agent
 
 REGISTRY["rnn"] = RNNAgent
 REGISTRY["n_rnn"] = NRNNAgent
@@ -20,4 +23,8 @@ REGISTRY["deepset_hyper_rnn"] = DeepSetHyperRNNAgent
 REGISTRY["updet_agent"] = UPDeT
 REGISTRY["asn_rnn"] = AsnRNNAgent
 REGISTRY["gnn_rnn"] = GnnRNNAgent
+
+REGISTRY["n_mamba"] = NMAMBAAgent
 REGISTRY["wm_hyper_rnn"] = WorldModelingHyperRNNAgent
+REGISTRY["wm_v1_hyper_rnn"] = WorldModelingHyperRNNV1Agent
+
